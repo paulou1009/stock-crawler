@@ -3,9 +3,6 @@ from pymongo import MongoClient
 # from datetime import datetime
 import datetime
 
-ts = 1478874600
-utc_dt = datetime.datetime.utcfromtimestamp(ts)
-print(utc_dt)
 
 client = MongoClient('localhost', 27017)
 db = client.data
@@ -15,8 +12,12 @@ symbol = "AAPL"
 response = requests.get(url)
 tokenString = response.text.split("\n")
 
+ts_raw = tokenString[7].split(",")[0]
+ts = ts_raw[1:]
+utc_dt = datetime.datetime.utcfromtimestamp(float(ts))
 index = 0
-for token in tokenString[8:]:
+
+for token in tokenString[7:]:
     # prevent from processing empty string
     if not token:
         continue
