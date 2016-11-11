@@ -3,7 +3,6 @@ from pymongo import MongoClient
 # from datetime import datetime
 import datetime
 
-
 client = MongoClient('localhost', 27017)
 db = client.data
 min_datas = db.min_data
@@ -29,9 +28,13 @@ for token in tokenString[7:]:
         time = utc_dt + datetime.timedelta(0, int(time_index) * 60)
 
     price = token.split(",")[1]
-    min_data = {"_id": symbol + "-" + time.strftime("%Y-%m-%d-%H-%M"),
-                "symbol": symbol,
-                "price": price,
-                "time": time}
-    data_id = min_datas.insert_one(min_data).inserted_id
+    id = symbol + "-" + time.strftime("%Y-%m-%d-%H-%M")
+    exist = min_datas.find_one({"_id": id})
+    if exist is None:
+        min_data = {"_id": id,
+                    "symbol": symbol,
+                    "price": price,
+                    "time": time}
+        data_id = min_datas.insert_one(min_data).inserted_id
+        print("persisted : " + str(min_data))
     index = index + 1
