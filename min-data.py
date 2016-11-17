@@ -1,11 +1,15 @@
 import requests
-from pymongo import MongoClient
-# from datetime import datetime
+import MySQLdb
 import datetime
 
-client = MongoClient('localhost', 27017)
-db = client.data
-min_datas = db.min_data
+db = MySQLdb.connect(
+    host = "localhost",
+    user="root",
+    passwd="password",
+    db="stock"
+)
+cur = db.cursor()
+
 url = "https://www.google.com/finance/getprices?q=AAPL&i=60&p=1d&f=d,o,h,l,c,v"
 symbol = "AAPL"
 response = requests.get(url)
@@ -29,12 +33,14 @@ for token in tokenString[7:]:
 
     price = token.split(",")[1]
     id = symbol + "-" + time.strftime("%Y-%m-%d-%H-%M")
-    exist = min_datas.find_one({"_id": id})
-    if exist is None:
-        min_data = {"_id": id,
-                    "symbol": symbol,
-                    "price": price,
-                    "time": time}
-        data_id = min_datas.insert_one(min_data).inserted_id
-        print("persisted : " + str(min_data))
+    exist = cur.execute("SELECT * FROM stock WHERE id = %s", (id,))
+    if exist == 0:
+        # min_data = {"_id": id,
+        #             "symbol": symbol,
+        #             "price": price,
+        #             "time": time}
+        # print("persisted : " + str(min_data))
+        cur.execute("INSERT INTO stock(id, symbol, price, date) VALUES (%s, %s, %s, %s)", (id, symbol, price, time.strftime('%Y-%m-%d %H:%M:%S')),)
+        db.commit()
     index = index + 1
+db.close()
